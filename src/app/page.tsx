@@ -4,6 +4,7 @@ import { ServiceMonitor } from '@/components/ServiceMonitor';
 import { OrderInterface } from '@/components/OrderInterface';
 import { InventoryControl } from '@/components/InventoryControl';
 import { SystemControls } from '@/components/SystemControls';
+import { ServerLogs } from '@/components/ServerLogs';
 import { Server } from 'lucide-react';
 
 export default function Home() {
@@ -28,6 +29,7 @@ export default function Home() {
           <div className="xl:col-span-2 space-y-6">
             <ServiceMonitor />
             <OrderInterface />
+            <ServerLogs />
           </div>
 
           <div className="space-y-6">
