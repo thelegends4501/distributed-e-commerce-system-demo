@@ -57,6 +57,7 @@ export default function ShopPage() {
 
       const response = await fetch(`/api/products?${params}`);
       const data = await response.json();
+      console.log("Products data:", data); // Debug log
       setProducts(data);
     } catch (error) {
       toast.error("Failed to load products");
@@ -220,6 +221,14 @@ export default function ShopPage() {
                       alt={product.name}
                       fill
                       className="object-cover"
+                      unoptimized
+                      onError={(e) => {
+                        console.error("Image failed to load:", product.image);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                      onLoad={() => {
+                        console.log("Image loaded successfully:", product.image);
+                      }}
                     />
                   </div>
                 </CardHeader>
