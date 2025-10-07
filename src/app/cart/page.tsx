@@ -113,7 +113,7 @@ export default function CartPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("bearer_token")}`,
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ userId: session.user.id }),
       });
 
       if (response.ok) {
@@ -121,12 +121,14 @@ export default function CartPage() {
         toast.success(
           `Order placed successfully! ${order.priority === "vip" ? "🌟 VIP Priority Processing" : ""}`
         );
+        await fetchCart(); // Refresh cart to show it's empty
         router.push("/orders");
       } else {
         const error = await response.json();
         toast.error(error.error || "Failed to place order");
       }
     } catch (error) {
+      console.error("Checkout error:", error);
       toast.error("Failed to place order");
     } finally {
       setIsCheckingOut(false);
