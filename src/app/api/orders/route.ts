@@ -78,13 +78,41 @@ export async function POST(request: Request) {
 
   orderQueue.addOrder(order);
 
+  // Process payment through payment service
+  let paymentResult: { success: boolean; error?: string; transactionId?: string } = { success: false };
+  
+  try {
+    const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/payment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderId: order.id,
+        amount: product.price * quantity,
+        userId,
+      }),
+    });
+
+    if (paymentResponse.ok) {
+      paymentResult = await paymentResponse.json();
+    } else {
+      paymentResult = { success: false, error: 'Payment service error' };
+    }
+  } catch (error) {
+    paymentResult = { success: false, error: 'Payment service unavailable' };
+  }
+
   // Simulate async order processing
   setTimeout(async () => {
-    const result = await inventoryManager.commitReservation(productId, quantity);
-    if (result.success) {
-      orderQueue.updateOrderStatus(order.id, 'completed');
+    if (paymentResult.success) {
+      const result = await inventoryManager.commitReservation(productId, quantity);
+      if (result.success) {
+        orderQueue.updateOrderStatus(order.id, 'completed');
+      } else {
+        orderQueue.updateOrderStatus(order.id, 'failed', result.error);
+        await inventoryManager.releaseReservation(productId, quantity);
+      }
     } else {
-      orderQueue.updateOrderStatus(order.id, 'failed', result.error);
+      orderQueue.updateOrderStatus(order.id, 'failed', paymentResult.error);
       await inventoryManager.releaseReservation(productId, quantity);
     }
   }, priority === 'vip' ? 1000 : 2000);
@@ -93,6 +121,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     order,
+    payment: paymentResult,
     serviceId: service.id,
   });
 }
