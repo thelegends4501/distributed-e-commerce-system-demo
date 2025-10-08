@@ -25,10 +25,11 @@ export function ServiceMonitor() {
       try {
         const res = await fetch('/api/services/health');
         const data = await res.json();
-        setServices(data.services);
-        setStrategy(data.loadBalancingStrategy);
+        setServices(data.services || []);
+        setStrategy(data.loadBalancingStrategy || 'round-robin');
       } catch (error) {
         console.error('Failed to fetch health:', error);
+        setServices([]);
       }
     };
 
@@ -66,7 +67,7 @@ export function ServiceMonitor() {
 
       <div className="space-y-4">
         {serviceTypes.map(type => {
-          const typeServices = services.filter(s => s.type === type);
+          const typeServices = (services || []).filter(s => s.type === type);
           
           return (
             <div key={type} className="border rounded-lg p-4">
